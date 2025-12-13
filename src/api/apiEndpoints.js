@@ -1,0 +1,20 @@
+import { config } from '../config/env.js';
+
+export const API_BASE_URL = config.apiBaseUrl;
+
+export const apiEndpoints = {
+    REGISTER: `${API_BASE_URL}/api/auth/register`,
+    LOGIN: `${API_BASE_URL}/api/auth/login`,
+    ADD_SWEET: `${API_BASE_URL}/api/sweets`,
+    GET_ALL_SWEETS: `${API_BASE_URL}/api/sweets`,
+    SEARCH: `${API_BASE_URL}/api/sweets/search`,
+    UPDATE_SWEET: (id) => `${API_BASE_URL}/api/sweets/${id}`,
+    DELETE_SWEET: (id) => `${API_BASE_URL}/api/sweets/${id}`,
+    PURCHASE: (id) => `${API_BASE_URL}/api/sweets/${id}/purchase`,
+    RESTOCK: (id) => `${API_BASE_URL}/api/sweets/${id}/restock`,
+    UPLOAD_IMAGE: (id) => `${API_BASE_URL}/api/sweets/${id}/upload-image`,
+    
+    // Payment endpoints
+    CREATE_ORDER: `${API_BASE_URL}/api/payment/create-order`,
+    VERIFY_PAYMENT: `${API_BASE_URL}/api/payment/verify-payment`,
+};
