@@ -11,7 +11,6 @@ const axiosInstance = axios.create({
   timeout: 30000, // 30 seconds timeout
 });
 
-// Request interceptor to add auth token
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -19,7 +18,6 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Log the request for debugging (remove in production)
     console.log('API Request:', config.method.toUpperCase(), config.url);
     
     return config;
@@ -30,10 +28,8 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle auth errors
 axiosInstance.interceptors.response.use(
   (response) => {
-    // Log successful responses (remove in production)
     console.log('API Response:', response.status, response.config.url);
     return response;
   },
@@ -47,7 +43,6 @@ axiosInstance.interceptors.response.use(
 
     // Only logout on authentication errors (401)
     if (error.response?.status === 401) {
-      // 401 means token is invalid/expired - logout
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       
@@ -57,7 +52,6 @@ axiosInstance.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    // 403 means insufficient permissions - don't logout, just let the error bubble up
     
     return Promise.reject(error);
   }

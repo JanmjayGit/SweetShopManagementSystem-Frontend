@@ -34,110 +34,40 @@ const LandingPage = () => {
     filterSweets();
   }, [searchQuery, selectedCategory, sweets]);
 
-  // const fetchSweets = async () => {
-  //   try {
-  //     setLoading(true);
-      
-  //     // Try to fetch real sweets data from backend
-  //     const response = await axiosInstance.get(apiEndpoints.GET_ALL_SWEETS);
-      
-  //     if (response.data && response.data.length > 0) {
-  //       setSweets(response.data);
-  //       setFilteredSweets(response.data);
-  //     } else {
-  //       // If no sweets in backend, show sample data
-  //       showSampleData();
-  //     }
-  //   } catch (error) {
-  //     console.log('Backend not available or requires auth, showing sample data');
-  //     // If backend is not available or requires authentication, show sample data
-  //     showSampleData();
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
+  
   const fetchSweets = async () => {
-  try {
-    setLoading(true);
-    
-    const response = await axiosInstance.get(apiEndpoints.GET_ALL_SWEETS);
-    
-    // Add this check to ensure response.data is an array
-    if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-      setSweets(response.data);
-      setFilteredSweets(response.data);
-    } else {
-      showSampleData();
-    }
-    } catch (error) {
-      console.log('Backend not available or requires auth, showing sample data');
-      showSampleData();
-    }   finally {
-      setLoading(false);
-  } 
-  };
-  const showSampleData = () => {
-    const sampleSweets = [
-      {
-        id: 'sample-1',
-        name: 'Chocolate Truffle',
-        category: 'Chocolate',
-        price: 25.99,
-        quantity: 15,
-        description: 'Rich dark chocolate truffle with cocoa powder',
-        imageUrl: null
-      },
-      {
-        id: 'sample-2',
-        name: 'Strawberry Delight',
-        category: 'Fruit',
-        price: 18.50,
-        quantity: 8,
-        description: 'Fresh strawberry flavored sweet treat',
-        imageUrl: null
-      },
-      {
-        id: 'sample-3',
-        name: 'Vanilla Cream Cake',
-        category: 'Cake',
-        price: 45.00,
-        quantity: 0,
-        description: 'Soft vanilla sponge cake with cream',
-        imageUrl: null
-      },
-      {
-        id: 'sample-4',
-        name: 'Caramel Fudge',
-        category: 'Caramel',
-        price: 22.75,
-        quantity: 12,
-        description: 'Smooth caramel fudge with butter',
-        imageUrl: null
-      },
-      {
-        id: 'sample-5',
-        name: 'Mint Chocolate Chip',
-        category: 'Chocolate',
-        price: 28.00,
-        quantity: 20,
-        description: 'Refreshing mint with chocolate chips',
-        imageUrl: null
-      },
-      {
-        id: 'sample-6',
-        name: 'Lemon Tart',
-        category: 'Tart',
-        price: 16.25,
-        quantity: 6,
-        description: 'Tangy lemon tart with crispy crust',
-        imageUrl: null
+    try {
+      setLoading(true);
+      console.log('🔄 Fetching sweets from backend...');
+      
+      const response = await axiosInstance.get(apiEndpoints.GET_ALL_SWEETS);
+      console.log('📦 Backend response:', response.data);
+      
+      // Always use backend data, even if empty
+      if (response.data && Array.isArray(response.data)) {
+        setSweets(response.data);
+        setFilteredSweets(response.data);
+        console.log(`✅ Loaded ${response.data.length} sweets from backend`);
+      } else {
+        console.warn('⚠️ Backend returned non-array data:', response.data);
+        setSweets([]);
+        setFilteredSweets([]);
       }
-    ];
-    
-    setSweets(sampleSweets);
-    setFilteredSweets(sampleSweets);
+    } catch (error) {
+      console.error('❌ Error fetching sweets from backend:', error);
+      console.error('Response status:', error.response?.status);
+      console.error('Response data:', error.response?.data);
+      
+      // Don't show sample data - show empty state instead
+      setSweets([]);
+      setFilteredSweets([]);
+      
+      toast.error('Failed to load sweets. Please check your connection.');
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   const filterSweets = () => {
     let filtered = sweets;
@@ -297,15 +227,15 @@ const LandingPage = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <p className="text-gray-600">
               Showing <span className="font-bold text-purple-600">{filteredSweets.length}</span> delicious treats
-              {sweets.length > 0 && typeof sweets[0].id === 'string' && sweets[0].id.startsWith('sample-') && (
-                <span className="ml-2 text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">
-                  Sample Data
+              {sweets.length > 0 && (
+                <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                  Live Data
                 </span>
               )}
             </p>
             <div className="bg-gradient-to-r from-pink-100 to-purple-100 border border-purple-200 rounded-lg p-3">
               <p className="text-sm text-purple-700 font-semibold">
-                🔒 <Link to="/login" className="underline hover:text-purple-800">Login</Link> to place orders and access full features!
+                <Link to="/login" className="underline hover:text-purple-800">Login</Link> to place orders and access full features!
               </p>
             </div>
           </div>
@@ -334,8 +264,21 @@ const LandingPage = () => {
             ) : (
               <div className="text-center py-20">
                 <Candy className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-2xl font-bold text-gray-400 mb-2">No sweets found</h3>
-                <p className="text-gray-500">Try adjusting your search or filters</p>
+                <h3 className="text-2xl font-bold text-gray-400 mb-2">
+                  {searchQuery || selectedCategory !== 'All' ? 'No sweets match your search' : 'No sweets available'}
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  {searchQuery || selectedCategory !== 'All' 
+                    ? 'Try adjusting your search or filters' 
+                    : 'Sweets will appear here once added to the database'
+                  }
+                </p>
+                <button
+                  onClick={fetchSweets}
+                  className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:shadow-lg transition-all"
+                >
+                  Refresh
+                </button>
               </div>
             )}
           </>
