@@ -42,4 +42,14 @@ export const config = {
 // Validate environment variables on import
 config.validate();
 
+// Debug logging in development
+if (config.isDevelopment) {
+  console.log('🔧 Environment Configuration:', {
+    apiBaseUrl: config.apiBaseUrl,
+    razorpayKeyId: config.razorpay.keyId ? 'Set' : 'Missing',
+    appName: config.app.name,
+    environment: import.meta.env.NODE_ENV
+  });
+}
+
 export default config;

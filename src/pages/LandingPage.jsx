@@ -13,7 +13,7 @@ import {
 import SweetCard from '../components/SweetCard';
 import Footer from '../components/Footer';
 import { apiEndpoints } from '../api/apiEndpoints';
-import axios from 'axios';
+import axiosInstance from '../api/axiosConfig';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -34,29 +34,49 @@ const LandingPage = () => {
     filterSweets();
   }, [searchQuery, selectedCategory, sweets]);
 
+  // const fetchSweets = async () => {
+  //   try {
+  //     setLoading(true);
+      
+  //     // Try to fetch real sweets data from backend
+  //     const response = await axiosInstance.get(apiEndpoints.GET_ALL_SWEETS);
+      
+  //     if (response.data && response.data.length > 0) {
+  //       setSweets(response.data);
+  //       setFilteredSweets(response.data);
+  //     } else {
+  //       // If no sweets in backend, show sample data
+  //       showSampleData();
+  //     }
+  //   } catch (error) {
+  //     console.log('Backend not available or requires auth, showing sample data');
+  //     // If backend is not available or requires authentication, show sample data
+  //     showSampleData();
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchSweets = async () => {
-    try {
-      setLoading(true);
-      
-      // Try to fetch real sweets data from backend
-      const response = await axios.get(apiEndpoints.GET_ALL_SWEETS);
-      
-      if (response.data && response.data.length > 0) {
-        setSweets(response.data);
-        setFilteredSweets(response.data);
-      } else {
-        // If no sweets in backend, show sample data
-        showSampleData();
-      }
+  try {
+    setLoading(true);
+    
+    const response = await axiosInstance.get(apiEndpoints.GET_ALL_SWEETS);
+    
+    // Add this check to ensure response.data is an array
+    if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+      setSweets(response.data);
+      setFilteredSweets(response.data);
+    } else {
+      showSampleData();
+    }
     } catch (error) {
       console.log('Backend not available or requires auth, showing sample data');
-      // If backend is not available or requires authentication, show sample data
       showSampleData();
-    } finally {
+    }   finally {
       setLoading(false);
-    }
+  } 
   };
-
   const showSampleData = () => {
     const sampleSweets = [
       {
@@ -145,7 +165,10 @@ const LandingPage = () => {
     navigate('/login');
   };
 
-  const categories = ['All', ...new Set(sweets.map(s => s.category))];
+  // const categories = ['All', ...new Set(sweets.map(s => s.category))];
+  const categories = Array.isArray(sweets) && sweets.length > 0 
+  ? ['All', ...new Set(sweets.map(s => s.category))]
+  : ['All']
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-indigo-50">

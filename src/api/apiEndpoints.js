@@ -1,6 +1,6 @@
 import { config } from '../config/env.js';
 
-export const API_BASE_URL = config.apiBaseUrl;
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const apiEndpoints = {
     REGISTER: `${API_BASE_URL}/api/auth/register`,
@@ -18,3 +18,5 @@ export const apiEndpoints = {
     CREATE_ORDER: `${API_BASE_URL}/api/payment/create-order`,
     VERIFY_PAYMENT: `${API_BASE_URL}/api/payment/verify-payment`,
 };
+
+export const RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID;

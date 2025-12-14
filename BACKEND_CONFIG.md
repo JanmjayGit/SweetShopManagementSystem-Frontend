@@ -65,7 +65,8 @@ public CorsConfigurationSource corsConfigurationSource() {
     config.setAllowedOrigins(List.of(
         "http://localhost:5173",  // Vite dev server
         "http://localhost:3000",  // Alternative React dev server
-        "http://localhost:8080"   // Same origin (if needed)
+        "https://sweetshopmanagementsystem-backend.onrender.com", // Production backend
+        "https://your-frontend-domain.com" // Add your frontend domain when deployed
     ));
     
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
@@ -143,7 +144,7 @@ Your `jwtAuthenticationFilter` should:
 
 ### 1. Test CORS
 ```bash
-curl -X OPTIONS http://localhost:8080/api/sweets \
+curl -X OPTIONS https://sweetshopmanagementsystem-backend.onrender.com/api/sweets \
   -H "Origin: http://localhost:5173" \
   -H "Access-Control-Request-Method: GET" \
   -H "Access-Control-Request-Headers: Authorization"
@@ -153,7 +154,7 @@ Should return CORS headers allowing the request.
 
 ### 2. Test Login
 ```bash
-curl -X POST http://localhost:8080/api/auth/login \
+curl -X POST https://sweetshopmanagementsystem-backend.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"password"}'
 ```
@@ -162,7 +163,7 @@ Should return token and user object.
 
 ### 3. Test Protected Endpoint
 ```bash
-curl -X GET http://localhost:8080/api/sweets \
+curl -X GET https://sweetshopmanagementsystem-backend.onrender.com/api/sweets \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 ```
 
