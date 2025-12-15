@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, Filter, X, SlidersHorizontal, Star } from 'lucide-react';
+import { useState, useMemo, useCallback } from 'react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 
 const SearchAndFilter = ({ 
   searchQuery, 
@@ -17,36 +17,37 @@ const SearchAndFilter = ({
   const [showFilters, setShowFilters] = useState(false);
   const [tempPriceRange, setTempPriceRange] = useState(priceRange);
 
-  const sortOptions = [
+  const sortOptions = useMemo(() => [
     { value: 'name', label: 'Name (A-Z)' },
     { value: 'name-desc', label: 'Name (Z-A)' },
     { value: 'price', label: 'Price (Low to High)' },
     { value: 'price-desc', label: 'Price (High to Low)' },
-    { value: 'rating', label: 'Highest Rated' },
     { value: 'newest', label: 'Newest First' }
-  ];
+  ], []);
 
-  const handlePriceRangeApply = () => {
+  const handlePriceRangeApply = useCallback(() => {
     onPriceRangeChange(tempPriceRange);
     setShowFilters(false);
-  };
+  }, [tempPriceRange, onPriceRangeChange]);
 
-  const clearAllFilters = () => {
+  const clearAllFilters = useCallback(() => {
     onSearchChange('');
     onCategoryChange('All');
     onPriceRangeChange({ min: 0, max: 1000 });
     onSortChange('name');
     onStockFilterChange(false);
     setTempPriceRange({ min: 0, max: 1000 });
-  };
+  }, [onSearchChange, onCategoryChange, onPriceRangeChange, onSortChange, onStockFilterChange]);
 
-  const activeFiltersCount = [
-    searchQuery,
-    selectedCategory !== 'All' ? selectedCategory : null,
-    priceRange.min > 0 || priceRange.max < 1000 ? 'price' : null,
-    sortBy !== 'name' ? sortBy : null,
-    showInStock ? 'stock' : null
-  ].filter(Boolean).length;
+  const activeFiltersCount = useMemo(() => {
+    return [
+      searchQuery,
+      selectedCategory !== 'All' ? selectedCategory : null,
+      priceRange.min > 0 || priceRange.max < 1000 ? 'price' : null,
+      sortBy !== 'name' ? sortBy : null,
+      showInStock ? 'stock' : null
+    ].filter(Boolean).length;
+  }, [searchQuery, selectedCategory, priceRange, sortBy, showInStock]);
 
   return (
     <div className="space-y-4">

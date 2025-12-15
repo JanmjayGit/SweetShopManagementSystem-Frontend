@@ -227,11 +227,11 @@ const LandingPage = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <p className="text-gray-600">
               Showing <span className="font-bold text-purple-600">{filteredSweets.length}</span> delicious treats
-              {sweets.length > 0 && (
+              {/* {sweets.length > 0 && (
                 <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
                   Live Data
                 </span>
-              )}
+              )} */}
             </p>
             <div className="bg-gradient-to-r from-pink-100 to-purple-100 border border-purple-200 rounded-lg p-3">
               <p className="text-sm text-purple-700 font-semibold">

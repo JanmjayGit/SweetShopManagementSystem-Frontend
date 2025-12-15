@@ -1,16 +1,14 @@
-import React, { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { 
   Candy, 
   ShoppingCart, 
-  Search, 
   LogOut, 
   User,
   Plus,
   Minus,
   Trash2,
-  Filter,
   X,
   ShoppingBag,
   Menu,
@@ -26,9 +24,8 @@ import { AuthContext } from '../context/AuthContext';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout, loading: authLoading } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
   const [sweets, setSweets] = useState([]);
-  const [filteredSweets, setFilteredSweets] = useState([]);
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,45 +34,12 @@ const Dashboard = () => {
   const [sortBy, setSortBy] = useState('name');
   const [showInStock, setShowInStock] = useState(false);
   const [showCart, setShowCart] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showOrderHistory, setShowOrderHistory] = useState(false);
 
-  useEffect(() => {
-    // Component only renders if authenticated (handled by ProtectedRoute)
-    fetchSweets();
-  }, []);
-
-  useEffect(() => {
-    filterAndSortSweets();
-  }, [searchQuery, selectedCategory, priceRange, sortBy, showInStock, sweets]);
-
-  const fetchSweets = async () => {
-    try {
-      const response = await axiosInstance.get(apiEndpoints.GET_ALL_SWEETS);
-      
-      // Ensure response.data is an array
-      const data = Array.isArray(response.data) ? response.data : [];
-      
-      setSweets(data);
-      setFilteredSweets(data);
-    } catch (error) {
-      console.error('Error fetching sweets:', error);
-      toast.error('Failed to load sweets');
-      // Set empty arrays on error
-      setSweets([]);
-      setFilteredSweets([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filterAndSortSweets = () => {
-    // Safety check - ensure sweets is an array
-    if (!Array.isArray(sweets)) {
-      setFilteredSweets([]);
-      return;
-    }
+  // Memoized filtered and sorted sweets for better performance
+  const filteredSweets = useMemo(() => {
+    if (!Array.isArray(sweets)) return [];
 
     let filtered = [...sweets];
 
@@ -86,9 +50,10 @@ const Dashboard = () => {
 
     // Search filter
     if (searchQuery) {
+      const query = searchQuery.toLowerCase();
       filtered = filtered.filter(sweet =>
-        sweet.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        sweet.category?.toLowerCase().includes(searchQuery.toLowerCase())
+        sweet.name.toLowerCase().includes(query) ||
+        sweet.category?.toLowerCase().includes(query)
       );
     }
 
@@ -113,8 +78,6 @@ const Dashboard = () => {
           return a.price - b.price;
         case 'price-desc':
           return b.price - a.price;
-        case 'rating':
-          return 4.8 - 4.5; // Placeholder since we don't have real ratings
         case 'newest':
           return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
         default:
@@ -122,41 +85,68 @@ const Dashboard = () => {
       }
     });
 
-    setFilteredSweets(filtered);
-  };
+    return filtered;
+  }, [sweets, selectedCategory, searchQuery, priceRange, showInStock, sortBy]);
 
-  const addToCart = (sweet) => {
+  // Memoized categories for better performance
+  const categories = useMemo(() => {
+    if (!Array.isArray(sweets) || sweets.length === 0) return ['All'];
+    return ['All', ...new Set(sweets.map(s => s.category))];
+  }, [sweets]);
+
+  useEffect(() => {
+    fetchSweets();
+  }, []);
+
+  const fetchSweets = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(apiEndpoints.GET_ALL_SWEETS);
+      const data = Array.isArray(response.data) ? response.data : [];
+      setSweets(data);
+    } catch (error) {
+      console.error('Error fetching sweets:', error);
+      toast.error('Failed to load sweets');
+      setSweets([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const addToCart = useCallback((sweet) => {
     if (sweet.quantity === 0) {
       toast.error('This item is out of stock');
       return;
     }
 
-    const existingItem = cart.find(item => item.id === sweet.id);
-    
-    if (existingItem) {
-      if (existingItem.cartQuantity >= sweet.quantity) {
-        toast.error('Cannot add more than available stock');
-        return;
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => item.id === sweet.id);
+      
+      if (existingItem) {
+        if (existingItem.cartQuantity >= sweet.quantity) {
+          toast.error('Cannot add more than available stock');
+          return prevCart;
+        }
+        toast.success(`${sweet.name} quantity increased`);
+        return prevCart.map(item =>
+          item.id === sweet.id
+            ? { ...item, cartQuantity: item.cartQuantity + 1 }
+            : item
+        );
+      } else {
+        toast.success(`${sweet.name} added to cart`);
+        return [...prevCart, { ...sweet, cartQuantity: 1 }];
       }
-      setCart(cart.map(item =>
-        item.id === sweet.id
-          ? { ...item, cartQuantity: item.cartQuantity + 1 }
-          : item
-      ));
-      toast.success(`${sweet.name} quantity increased`);
-    } else {
-      setCart([...cart, { ...sweet, cartQuantity: 1 }]);
-      toast.success(`${sweet.name} added to cart`);
-    }
-  };
+    });
+  }, []);
 
-  const removeFromCart = (sweetId) => {
-    setCart(cart.filter(item => item.id !== sweetId));
+  const removeFromCart = useCallback((sweetId) => {
+    setCart(prevCart => prevCart.filter(item => item.id !== sweetId));
     toast.success('Item removed from cart');
-  };
+  }, []);
 
-  const updateCartQuantity = (sweetId, change) => {
-    setCart(cart.map(item => {
+  const updateCartQuantity = useCallback((sweetId, change) => {
+    setCart(prevCart => prevCart.map(item => {
       if (item.id === sweetId) {
         const newQuantity = item.cartQuantity + change;
         if (newQuantity <= 0) return item;
@@ -168,42 +158,36 @@ const Dashboard = () => {
       }
       return item;
     }));
-  };
+  }, []);
 
-  const handleProceedToCheckout = () => {
+  const handleProceedToCheckout = useCallback(() => {
     if (cart.length === 0) {
       toast.error('Your cart is empty');
       return;
     }
     setShowCart(false);
     setShowCheckout(true);
-  };
+  }, [cart.length]);
 
-  const handleCheckoutSuccess = () => {
+  const handleCheckoutSuccess = useCallback(() => {
     setCart([]);
     setShowCheckout(false);
     fetchSweets(); // Refresh the sweets list
     toast.success('Thank you for your purchase!');
-  };
+  }, [fetchSweets]);
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     toast.success('Logged out successfully');
-    navigate('/login');
-  };
+    navigate('/');
+  }, [logout, navigate]);
 
-  const getTotalPrice = () => {
-    return cart.reduce((total, item) => total + (item.price * item.cartQuantity), 0);
-  };
-
-  const getTotalItems = () => {
-    return cart.reduce((total, item) => total + item.cartQuantity, 0);
-  };
-
-  // Safety check for categories
-  const categories = Array.isArray(sweets) && sweets.length > 0 
-    ? ['All', ...new Set(sweets.map(s => s.category))]
-    : ['All'];
+  // Memoized calculations for better performance
+  const { totalPrice, totalItems } = useMemo(() => {
+    const totalPrice = cart.reduce((total, item) => total + (item.price * item.cartQuantity), 0);
+    const totalItems = cart.reduce((total, item) => total + item.cartQuantity, 0);
+    return { totalPrice, totalItems };
+  }, [cart]);
 
   // Show loading while fetching sweets
   if (!user) {
@@ -249,9 +233,9 @@ const Dashboard = () => {
                 className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <ShoppingCart className="w-6 h-6 text-gray-700" />
-                {cart.length > 0 && (
+                {totalItems > 0 && (
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {getTotalItems()}
+                    {totalItems}
                   </span>
                 )}
               </button>
@@ -324,7 +308,7 @@ const Dashboard = () => {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-gray-600">
-            Showing <span className="font-bold text-purple-600">{Array.isArray(filteredSweets) ? filteredSweets.length : 0}</span> sweets
+            Showing <span className="font-bold text-purple-600">{filteredSweets.length}</span> sweets
           </p>
         </div>
 
@@ -336,7 +320,7 @@ const Dashboard = () => {
         ) : (
           <>
             {/* Sweets Grid */}
-            {Array.isArray(filteredSweets) && filteredSweets.length > 0 ? (
+            {filteredSweets.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredSweets.map((sweet) => {
                   const cartItem = cart.find(item => item.id === sweet.id);
@@ -391,7 +375,7 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <h2 className="text-3xl font-bold">Your Cart</h2>
-                    <p className="text-pink-100 mt-1">{getTotalItems()} delicious items</p>
+                    <p className="text-pink-100 mt-1">{totalItems} delicious items</p>
                   </div>
                 </div>
                 <button
@@ -473,7 +457,7 @@ const Dashboard = () => {
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-xl font-bold text-gray-700">Total Amount:</span>
                   <span className="text-3xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent">
-                    ₹{getTotalPrice().toFixed(2)}
+                    ₹{totalPrice.toFixed(2)}
                   </span>
                 </div>
                 <div className="flex gap-3">
@@ -500,7 +484,7 @@ const Dashboard = () => {
       {showCheckout && (
         <Checkout
           cart={cart}
-          totalAmount={getTotalPrice()}
+          totalAmount={totalPrice}
           onClose={() => setShowCheckout(false)}
           onSuccess={handleCheckoutSuccess}
         />

@@ -13,6 +13,7 @@ import {
   Truck,
   Clock
 } from 'lucide-react';
+import { FaFacebook , FaTwitter, FaInstagram, FaYoutube} from "react-icons/fa";
 
 const Footer = () => {
   return (
@@ -34,16 +35,16 @@ const Footer = () => {
             </p>
             <div className="flex space-x-4">
               <a href="#" className="bg-white bg-opacity-20 p-2 rounded-full hover:bg-opacity-30 transition-colors">
-                <Facebook className="w-5 h-5" />
+                <FaFacebook className="w-8 h-8 text-blue-600 font-bold"/>
               </a>
               <a href="#" className="bg-white bg-opacity-20 p-2 rounded-full hover:bg-opacity-30 transition-colors">
-                <Twitter className="w-5 h-5" />
+                <FaTwitter className="w-8 h-8 text-blue-600" />
               </a>
               <a href="#" className="bg-white bg-opacity-20 p-2 rounded-full hover:bg-opacity-30 transition-colors">
-                <Instagram className="w-5 h-5" />
+                <FaInstagram className="w-8 h-8 text-pink-600" />
               </a>
               <a href="#" className="bg-white bg-opacity-20 p-2 rounded-full hover:bg-opacity-30 transition-colors">
-                <Youtube className="w-5 h-5" />
+                <FaYoutube className="w-8 h-8 text-red-600" />
               </a>
             </div>
           </div>
@@ -112,7 +113,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-pink-200" />
-                <span className="text-pink-100">hello@sweetshop.com</span>
+                <span className="text-pink-100">support@sweetshop.com</span>
               </div>
               <div className="flex items-center gap-3">
                 <Clock className="w-5 h-5 text-pink-200" />
@@ -130,7 +131,7 @@ const Footer = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-center gap-3">
               <div className="bg-white bg-opacity-20 p-3 rounded-full">
-                <Truck className="w-6 h-6" />
+                <Truck className="w-6 h-6 bg-white text-indigo-600 font-bold" />
               </div>
               <div>
                 <h4 className="font-semibold">Free Delivery</h4>
@@ -139,7 +140,7 @@ const Footer = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="bg-white bg-opacity-20 p-3 rounded-full">
-                <Shield className="w-6 h-6" />
+                <Shield className="w-6 h-6 bg-white text-indigo-600 font-bold" />
               </div>
               <div>
                 <h4 className="font-semibold">Secure Payments</h4>
@@ -148,7 +149,7 @@ const Footer = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="bg-white bg-opacity-20 p-3 rounded-full">
-                <Heart className="w-6 h-6" />
+                <Heart className="w-6 h-6 bg-white text-pink-600 font-bold" />
               </div>
               <div>
                 <h4 className="font-semibold">Made with Love</h4>
