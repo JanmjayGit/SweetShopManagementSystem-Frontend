@@ -11,9 +11,9 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
     return <LoadingSpinner fullScreen message="Checking authentication..." />;
   }
 
-  // Redirect to login if not authenticated
+  // Redirect to landing page if not authenticated
   if (!token || !user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // Check admin access if required
